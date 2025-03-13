@@ -54,8 +54,9 @@ index = load_data()
 
 def get_gemini_response(prompt):
     """Generate response using Gemini AI and return it sentence by sentence for simulated streaming."""
-    model = genai.GenerativeModel(
-        "gemini-1.5-pro-latest")  # Use "gemini-1.5-flash-latest" for speed
+    # model = genai.GenerativeModel("gemini-1.5-pro-latest")  # Use "gemini-1.5-flash-latest" for speed
+    # Use "gemini-1.5-flash-latest" for speed
+    model = genai.GenerativeModel("gemini-1.5-flash-latest")
     # No streaming support, so we simulate it
     response = model.generate_content(prompt)
 
@@ -70,7 +71,7 @@ def get_gemini_response(prompt):
 
 
 # ✅ Streamlit UI
-st.title("Chat with Your PDFs 🤖📚 (Gemini-Powered)")
+st.title("RAG-Based-Chatbot")
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
