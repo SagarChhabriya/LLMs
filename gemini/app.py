@@ -1,6 +1,8 @@
 import streamlit as st
 import google.generativeai as genai
 import time
+import os
+
 
 # --- Must be the first Streamlit command ---
 st.set_page_config(page_title="Gemini AI Bot", page_icon="🤖", layout="wide")
@@ -75,6 +77,9 @@ st.markdown(
 # --- Configure API Key ---
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    # for github actions
+    # genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
 except KeyError:
     st.sidebar.error("⚠️ API key not found! Please check your secrets.")
     st.stop()
