@@ -1,9 +1,9 @@
+import os
+import time
+import re
+import fitz  # PyMuPDF for reading PDFs
 import streamlit as st
 import google.generativeai as genai
-import fitz  # PyMuPDF for reading PDFs
-import os
-import time  # For streaming effect
-import re  # For splitting text into sentences
 from llama_index.core import VectorStoreIndex, Document, Settings
 from llama_index.embeddings.google import GeminiEmbedding
 
@@ -14,87 +14,89 @@ Settings.embed_model = GeminiEmbedding(model_name="models/embedding-001")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", st.secrets["GEMINI_API_KEY"])
 genai.configure(api_key=GEMINI_API_KEY)
 
-# ✅ Extract text from PDFs
+# ✅ PDF Text Extraction Function
 
 
 def extract_text_from_pdf(pdf_path):
-    """Extract text from a PDF file using PyMuPDF."""
+    """Extracts text from a given PDF file using PyMuPDF."""
     doc = fitz.open(pdf_path)
     text = f"Document: {os.path.basename(pdf_path)}\n\n"
-    for page in doc:
-        text += page.get_text("text") + "\n"
+    text += "\n".join(page.get_text("text") for page in doc)
     return text
 
-# ✅ Load Data and Create Index
+# ✅ Load PDFs & Create Index
 
 
 @st.cache_resource(show_spinner=False)
 def load_data():
+    """Loads and indexes PDF documents for retrieval."""
+    data_dir = "./data"  # Directory containing PDF files
+    docs = []
+
+    if not os.path.exists(data_dir):
+        st.warning(
+            f"Data directory `{data_dir}` not found. Please upload PDFs.")
+        return None
+
+    pdf_files = [f for f in os.listdir(data_dir) if f.endswith(".pdf")]
+    if not pdf_files:
+        st.warning("No PDF files found in the data directory.")
+        return None
+
     with st.spinner("Loading and indexing documents..."):
-        docs = []
-        data_dir = "./data"  # Directory containing PDF files
+        for filename in pdf_files:
+            pdf_path = os.path.join(data_dir, filename)
+            text = extract_text_from_pdf(pdf_path)
+            docs.append(Document(text=text))
 
-        # Read all PDF files in the directory
-        for filename in os.listdir(data_dir):
-            if filename.endswith(".pdf"):
-                pdf_path = os.path.join(data_dir, filename)
-                text = extract_text_from_pdf(pdf_path)
-                doc = Document(text=text)
-                docs.append(doc)
-
-        # Create an index from extracted documents
-        index = VectorStoreIndex.from_documents(docs)
-        return index
+        return VectorStoreIndex.from_documents(docs)
 
 
 index = load_data()
 
-# ✅ Gemini Response Generator with Sentence-by-Sentence Streaming
+# ✅ Gemini Response Generator with Streaming
 
 
-def get_gemini_response(prompt):
-    """Generate response using Gemini AI and return it sentence by sentence for simulated streaming."""
-    # model = genai.GenerativeModel("gemini-1.5-pro-latest")  # Use "gemini-1.5-flash-latest" for speed
-    # Use "gemini-1.5-flash-latest" for speed
-    model = genai.GenerativeModel("gemini-1.5-flash-latest")
-    # No streaming support, so we simulate it
+def generate_gemini_response(prompt):
+    """Generates response using Gemini AI and streams it sentence by sentence."""
+    model = genai.GenerativeModel(
+        "gemini-1.5-flash-latest")  # Optimized for speed
     response = model.generate_content(prompt)
 
     response_text = response.text if response and response.text else "Sorry, I couldn't generate a response."
-
-    # Split response into sentences
-    # Splits on .!? but keeps them
+    # Splitting while preserving punctuation
     sentences = re.split(r'(?<=[.!?]) +', response_text)
 
     for sentence in sentences:
-        yield sentence.strip()  # Yield one sentence at a time
+        yield sentence.strip()
 
 
 # ✅ Streamlit UI
-st.title("RAG-Based-Chatbot")
+st.title("📖 RAG-Based Chatbot")
 
+# Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Ask me a question based on your PDFs!"}]
+        {"role": "assistant", "content": "Upload PDFs and ask questions!"}]
 
-if prompt := st.chat_input("Your question"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
+# Chat Interface
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
 
-    # Display previous messages
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.write(message["content"])
+# User Input
+if user_input := st.chat_input("Ask me something based on the PDFs!"):
+    st.session_state.messages.append({"role": "user", "content": user_input})
 
-    # Generate response using Gemini with sentence-by-sentence streaming
+    # Generate Response
     with st.chat_message("assistant"):
-        response_placeholder = st.empty()  # Placeholder for dynamic updates
+        response_placeholder = st.empty()
         full_response = ""
 
-        for sentence in get_gemini_response(prompt):
+        for sentence in generate_gemini_response(user_input):
             full_response += sentence + " "
-            response_placeholder.write(full_response)  # Update dynamically
-            time.sleep(0.5)  # Pause for effect
+            response_placeholder.write(full_response)
+            time.sleep(0.5)  # Simulated streaming effect
 
-        # Store the final response in chat history
         st.session_state.messages.append(
             {"role": "assistant", "content": full_response})
