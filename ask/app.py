@@ -7,14 +7,18 @@ import google.generativeai as genai
 from llama_index.core import VectorStoreIndex, Document, Settings
 from llama_index.embeddings.google import GeminiEmbedding
 
-# ✅ Configure Gemini Embeddings
+
+#  Set Browser Tab Title & Icon
+st.set_page_config(page_title="CallRag", page_icon="😎")
+
+#  Configure Gemini Embeddings
 Settings.embed_model = GeminiEmbedding(model_name="models/embedding-001")
 
-# ✅ Load API Key
+#  Load API Key
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", st.secrets["GEMINI_API_KEY"])
 genai.configure(api_key=GEMINI_API_KEY)
 
-# ✅ PDF Text Extraction Function
+#  PDF Text Extraction Function
 
 
 def extract_text_from_pdf(pdf_path):
@@ -24,7 +28,7 @@ def extract_text_from_pdf(pdf_path):
     text += "\n".join(page.get_text("text") for page in doc)
     return text
 
-# ✅ Load PDFs & Create Index
+# Load PDFs & Create Index
 
 
 @st.cache_resource(show_spinner=False)
@@ -55,7 +59,7 @@ def load_data():
 
 index = load_data()
 
-# ✅ Gemini Response Generator with Streaming
+#  Gemini Response Generator with Streaming
 
 
 def generate_gemini_response(prompt):
@@ -72,7 +76,7 @@ def generate_gemini_response(prompt):
         yield sentence.strip()
 
 
-# ✅ Streamlit UI
+#  Streamlit UI
 st.title("📖 RAG-Based Chatbot")
 
 # Initialize chat history
@@ -87,13 +91,13 @@ for message in st.session_state.messages:
 
 # User Input
 if user_input := st.chat_input("Type a message"):
-    # ✅ Show User Input Immediately
+    #  Show User Input Immediately
     with st.chat_message("user"):
         st.write(user_input)
 
     st.session_state.messages.append({"role": "user", "content": user_input})
 
-    # ✅ Generate Response Immediately
+    #  Generate Response Immediately
     with st.chat_message("assistant"):
         response_placeholder = st.empty()
         full_response = ""
