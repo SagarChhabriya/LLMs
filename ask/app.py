@@ -30,7 +30,8 @@ def extract_text_from_pdf(pdf_path):
 @st.cache_resource(show_spinner=False)
 def load_data():
     """Loads and indexes PDF documents for retrieval."""
-    data_dir = "./data"  # Directory containing PDF files
+    # data_dir = "./data"  # Directory containing PDF files
+    data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "data"))
     docs = []
 
     if not os.path.exists(data_dir):
@@ -77,7 +78,7 @@ st.title("📖 RAG-Based Chatbot")
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Upload PDFs and ask questions!"}]
+        {"role": "assistant", "content": "Ask questions!"}]
 
 # Chat Interface
 for message in st.session_state.messages:
@@ -85,7 +86,7 @@ for message in st.session_state.messages:
         st.write(message["content"])
 
 # User Input
-if user_input := st.chat_input("Ask me something based on the PDFs!"):
+if user_input := st.chat_input("Type a message"):
     st.session_state.messages.append({"role": "user", "content": user_input})
 
     # Generate Response
