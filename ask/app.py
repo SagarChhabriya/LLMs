@@ -87,9 +87,13 @@ for message in st.session_state.messages:
 
 # User Input
 if user_input := st.chat_input("Type a message"):
+    # ✅ Show User Input Immediately
+    with st.chat_message("user"):
+        st.write(user_input)
+
     st.session_state.messages.append({"role": "user", "content": user_input})
 
-    # Generate Response
+    # ✅ Generate Response Immediately
     with st.chat_message("assistant"):
         response_placeholder = st.empty()
         full_response = ""
