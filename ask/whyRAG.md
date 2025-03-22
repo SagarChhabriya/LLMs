@@ -1,6 +1,3 @@
-Glad you liked it! Now, let's refine it further by integrating how we actually **built** this model while keeping it clear and engaging.  
-
----
 
 ## **🔹 Fine-Tuning vs. RAG – What’s the Best Approach for Our Chatbot?**  
 
