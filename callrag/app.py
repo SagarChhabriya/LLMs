@@ -109,3 +109,4 @@ if user_input := st.chat_input("Type a message"):
 
         st.session_state.messages.append(
             {"role": "assistant", "content": full_response})
+ 
